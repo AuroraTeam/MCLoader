@@ -18,6 +18,7 @@
 
 import * as colors from "colors/safe"
 
+import { LogHelper } from "../../helpers/LogHelper"
 import { App } from "../../MCLoader"
 import { AbstractCommand, Category } from "../AbstractCommand"
 
@@ -34,9 +35,9 @@ export class HelpCommand extends AbstractCommand {
 
         commandsList.forEach((category, category_name) => {
             if (category.length === 0) return
-            console.log(`=== [ %s ] ===`, category_name.toUpperCase())
+            LogHelper.info(`=== [ %s ] ===`, category_name.toUpperCase())
             category.forEach((command) => {
-                console.log(
+                LogHelper.info(
                     `${colors.bold(command.getName())}${
                         command.getUsage() == undefined ? "" : colors.red(" " + command.getUsage())
                     } - ${command.getDescription()}`

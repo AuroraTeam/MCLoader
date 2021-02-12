@@ -16,8 +16,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { MojangManager } from "../../MojangManager"
+import { LogHelper } from "../../helpers/LogHelper"
 import { App } from "../../MCLoader"
+import { MojangManager } from "../../MojangManager"
 import { AbstractCommand, Category } from "../AbstractCommand"
 
 export class DownloadClientCommand extends AbstractCommand {
@@ -27,8 +28,8 @@ export class DownloadClientCommand extends AbstractCommand {
 
     async invoke(...args: string[]): Promise<void> {
         const [clientVer, dirName] = args
-        if (!clientVer) return console.error("Укажите название/версию клиента!")
-        if (!dirName) return console.error("Укажите название папки для клиента!")
+        if (!clientVer) return LogHelper.error("Укажите название/версию клиента!")
+        if (!dirName) return LogHelper.error("Укажите название папки для клиента!")
         App.CommandsManager.console.pause()
         new MojangManager().downloadClient(clientVer, dirName)
         App.CommandsManager.console.resume()

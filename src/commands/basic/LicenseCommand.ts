@@ -18,6 +18,7 @@
 
 import * as colors from "colors/safe"
 
+import { LogHelper } from "../../helpers/LogHelper"
 import { AbstractCommand, Category } from "../AbstractCommand"
 
 export class LicenseCommand extends AbstractCommand {
@@ -27,19 +28,15 @@ export class LicenseCommand extends AbstractCommand {
 
     invoke(...[cmd]: string[]): void {
         if (cmd === "w") {
-            console.log(
-                colors.bold(
-                    colors.green("More info: https://github.com/AuroraTeam/MCLoader/blob/master/LICENSE#L589")
-                )
+            LogHelper.raw(
+                colors.bold(colors.green("More info: https://github.com/AuroraTeam/MCLoader/blob/master/LICENSE#L589"))
             )
         } else if (cmd === "c") {
-            console.log(
-                colors.bold(
-                    colors.green("More info: https://github.com/AuroraTeam/MCLoader/blob/master/LICENSE#L71")
-                )
+            LogHelper.raw(
+                colors.bold(colors.green("More info: https://github.com/AuroraTeam/MCLoader/blob/master/LICENSE#L71"))
             )
         } else {
-            console.log(
+            LogHelper.raw(
                 colors.bold(
                     colors.cyan("MCLoader ") +
                         colors.blue("Copyright (C) 2021 AuroraTeam") +

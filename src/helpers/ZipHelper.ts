@@ -21,6 +21,7 @@ import * as path from "path"
 
 import * as yauzl from "yauzl"
 
+import { LogHelper } from "./LogHelper"
 import { ProgressHelper } from "./ProgressHelper"
 
 export class ZipHelper {
@@ -32,7 +33,7 @@ export class ZipHelper {
     static unzipArchive(archive: string, destDir: string, whitelist: string[] = []): Promise<boolean> {
         return new Promise((resolve) => {
             yauzl.open(archive, { lazyEntries: true }, (err, zipfile) => {
-                if (err) console.error(err)
+                if (err) LogHelper.error(err)
 
                 const length = zipfile.fileSize
                 let downloaded = 0
@@ -65,7 +66,7 @@ export class ZipHelper {
                     progress.emit("end")
                     resolve(true)
                 })
-                zipfile.on("error", (error) => console.error(error))
+                zipfile.on("error", (error) => LogHelper.error(error))
             })
         })
     }

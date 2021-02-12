@@ -21,13 +21,17 @@ require("source-map-support").install()
 const version = require("../package").version
 
 import * as colors from "colors/safe"
+
 import { CommandsManager } from "./commands/CommandsManager"
+import { LogHelper } from "./helpers/LogHelper"
+import { StorageHelper } from "./helpers/StorageHelper"
 
 export class MCLoader {
     private _CommandsManager: CommandsManager
 
     constructor() {
-        console.log(
+        StorageHelper.createMissing()
+        LogHelper.raw(
             colors.bold(
                 colors.cyan("MCLoader ") +
                     "v" +

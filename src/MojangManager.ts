@@ -25,7 +25,9 @@ import { URL } from "url"
 import * as pMap from "p-map"
 import * as rimraf from "rimraf"
 
+import { LogHelper } from "./helpers/LogHelper"
 import { ProgressHelper } from "./helpers/ProgressHelper"
+import { StorageHelper } from "./helpers/StorageHelper"
 import { ZipHelper } from "./helpers/ZipHelper"
 
 export class MojangManager {
@@ -41,12 +43,9 @@ export class MojangManager {
         const client: any = version.downloads.client
         const libraries: any[] = version.libraries
 
-        const filesDir = path.resolve(__dirname, "files")
-        if (!fs.existsSync(filesDir)) fs.mkdirSync(filesDir)
-
         // Client
-        const clientDir = path.resolve(filesDir, dirName)
-        if (fs.existsSync(clientDir)) return console.error("Папка с таким названием уже существует!")
+        const clientDir = path.resolve(StorageHelper.filesDir, dirName)
+        if (fs.existsSync(clientDir)) return LogHelper.error("Папка с таким названием уже существует!")
         fs.mkdirSync(clientDir)
 
         const clientFile = await this.downloadFile(new URL(client.url))
@@ -56,7 +55,7 @@ export class MojangManager {
         const librariesDir = path.resolve(clientDir, "libraries")
         fs.mkdirSync(librariesDir)
 
-        console.log("Библиотеки и нативные файлы загружаются, пожалуйста подождите...")
+        LogHelper.info("Библиотеки и нативные файлы загружаются, пожалуйста подождите...")
         const librariesList = this.librariesParse(libraries)
 
         await Promise.all(
@@ -78,11 +77,11 @@ export class MojangManager {
             })
         )
 
-        rimraf(path.resolve(path.resolve(__dirname, "temp"), "*"), (e) => {
-            if (e !== null) console.error(e)
+        rimraf(path.resolve(StorageHelper.tempDir, "*"), (e) => {
+            if (e !== null) LogHelper.warn(e)
         })
 
-        console.log("Готово")
+        LogHelper.info("Готово")
     }
 
     /**
@@ -94,11 +93,8 @@ export class MojangManager {
         const version: any = await this.getVersionInfo(assetsVer)
         if (version === undefined) return
 
-        const filesDir = path.resolve(__dirname, "files")
-        if (!fs.existsSync(filesDir)) fs.mkdirSync(filesDir)
-
-        const assetsDir = path.resolve(filesDir, dirName)
-        if (fs.existsSync(assetsDir)) return console.error("Папка с таким названием уже существует!")
+        const assetsDir = path.resolve(StorageHelper.filesDir, dirName)
+        if (fs.existsSync(assetsDir)) return LogHelper.error("Папка с таким названием уже существует!")
         fs.mkdirSync(assetsDir)
 
         const assetsFile = await this.downloadFile(new URL(version.assetIndex.url), false)
@@ -117,7 +113,7 @@ export class MojangManager {
         const totalSize = version.assetIndex.totalSize
         let downloaded = 0
 
-        console.log("Файлы ассетов загружаются, пожалуйста подождите...")
+        LogHelper.info("Файлы ассетов загружаются, пожалуйста подождите...")
         const progress = ProgressHelper.getLoadingProgressBar()
         await pMap(
             assetsHashes,
@@ -140,11 +136,11 @@ export class MojangManager {
         )
         progress.emit("end")
 
-        rimraf(path.resolve(path.resolve(__dirname, "temp"), "*"), (e) => {
-            if (e !== null) console.error(e)
+        rimraf(path.resolve(StorageHelper.tempDir, "*"), (e) => {
+            if (e !== null) LogHelper.warn(e)
         })
 
-        console.log("Готово")
+        LogHelper.info("Готово")
     }
 
     /**
@@ -211,9 +207,7 @@ export class MojangManager {
      */
     downloadFile(url: URL, showProgress = true): Promise<string> {
         return new Promise((resolve, reject) => {
-            const tempDir = path.resolve(__dirname, "temp")
-            if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir)
-            const tempFilename = path.resolve(tempDir, randomBytes(16).toString("hex"))
+            const tempFilename = path.resolve(StorageHelper.tempDir, randomBytes(16).toString("hex"))
             const tempFile = fs.createWriteStream(tempFilename)
             tempFile.on("close", () => {
                 resolve(tempFilename)
@@ -267,8 +261,8 @@ export class MojangManager {
         try {
             versionsData = await this.readFile("https://launchermeta.mojang.com/mc/game/version_manifest.json")
         } catch (error) {
-            console.error("Mojang site unavailable")
-            console.error(error)
+            LogHelper.error("Mojang site unavailable")
+            LogHelper.error(error)
             return
         }
 
@@ -276,21 +270,21 @@ export class MojangManager {
         try {
             versions = JSON.parse(versionsData).versions
         } catch (error) {
-            console.error("Error parsing JSON data")
-            console.error(error)
+            LogHelper.error("Error parsing JSON data")
+            LogHelper.error(error)
             return
         }
 
         const _version = versions.find((v: any) => v.id === version)
         if (_version === undefined) {
-            console.error("Version %s not found", version)
+            LogHelper.error("Version %s not found", version)
             return
         }
 
         try {
             return JSON.parse(await this.readFile(_version.url))
         } catch (error) {
-            console.log(error)
+            LogHelper.error(error)
             return
         }
     }

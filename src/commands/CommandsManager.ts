@@ -18,6 +18,7 @@
 
 import * as ReadLine from "readline"
 
+import { LogHelper } from "../helpers/LogHelper"
 import { AbstractCommand } from "./AbstractCommand"
 import { HelpCommand } from "./basic/HelpCommand"
 import { LicenseCommand } from "./basic/LicenseCommand"
@@ -60,8 +61,7 @@ export class CommandsManager {
         this.console.on("line", (line) => {
             const args = line.trim().split(/ +/)
             const cmd = args.shift().toLowerCase()
-            if (!this.commands.has(cmd))
-                return console.error("Команда \"%s\" не найдена!", cmd)
+            if (!this.commands.has(cmd)) return LogHelper.error('Команда "%s" не найдена!', cmd)
             this.commands.get(cmd).invoke(...args)
         })
     }

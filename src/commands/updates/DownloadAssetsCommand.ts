@@ -16,8 +16,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { MojangManager } from "../../MojangManager"
+import { LogHelper } from "../../helpers/LogHelper"
 import { App } from "../../MCLoader"
+import { MojangManager } from "../../MojangManager"
 import { AbstractCommand, Category } from "../AbstractCommand"
 
 export class DownloadAssetsCommand extends AbstractCommand {
@@ -27,8 +28,8 @@ export class DownloadAssetsCommand extends AbstractCommand {
 
     async invoke(...args: string[]): Promise<void> {
         const [assetsVer, dirName] = args
-        if (!assetsVer) return console.error("Укажите название/версию ассетов!")
-        if (!dirName) return console.error("Укажите название папки для ассетов!")
+        if (!assetsVer) return LogHelper.error("Укажите название/версию ассетов!")
+        if (!dirName) return LogHelper.error("Укажите название папки для ассетов!")
         App.CommandsManager.console.pause()
         await new MojangManager().downloadAssets(assetsVer, dirName)
         App.CommandsManager.console.resume()
