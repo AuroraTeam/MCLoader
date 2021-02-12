@@ -136,7 +136,7 @@ export class MojangManager {
                     percentage: (downloaded / totalSize) * 100,
                 })
             },
-            { concurrency: 64 }
+            { concurrency: 32 }
         )
         progress.emit("end")
 
