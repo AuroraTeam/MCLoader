@@ -2,7 +2,7 @@ name: Build
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, dev ]
 
 jobs:
   build:
@@ -25,7 +25,7 @@ jobs:
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v2.2.0
         with:
-          name: LauncherServer
+          name: MCLoader
           path: dist
           if-no-files-found: error
           retention-days: 30
@@ -36,8 +36,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: MCLoader ${{ github.ref }}
+          tag_name: ${{ node -p "require('./package.json').version" }}
+          release_name: MCLoader ${{ node -p "require('./package.json').version" }}
           draft: true
           prerelease: false
 
