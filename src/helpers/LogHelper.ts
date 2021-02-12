@@ -29,6 +29,11 @@ export class LogHelper {
         this.log(LogLevel.ERROR, msg, ...args)
     }
 
+    static fatal(msg: any, ...args: any): void {
+        this.log(LogLevel.FATAL, msg, ...args)
+        process.exit(1)
+    }
+
     static info(msg: any, ...args: any[]): void {
         this.log(LogLevel.INFO, msg, ...args)
     }
@@ -58,6 +63,7 @@ export class LogHelper {
         let coloredStr: string = colors.gray(date)
         switch (level) {
             case LogLevel.ERROR:
+            case LogLevel.FATAL:
                 coloredStr += colors.red(` [${level.toUpperCase()}] ${msg}`)
                 break
             case LogLevel.INFO:
@@ -84,6 +90,7 @@ export class LogHelper {
 
 enum LogLevel {
     ERROR = "error",
+    FATAL = "fatal",
     INFO = "info",
     RAW = "raw",
     WARN = "warn",

@@ -29,6 +29,7 @@ import { LogHelper } from "./helpers/LogHelper"
 import { ProgressHelper } from "./helpers/ProgressHelper"
 import { StorageHelper } from "./helpers/StorageHelper"
 import { ZipHelper } from "./helpers/ZipHelper"
+import { App } from "./MCLoader"
 
 export class MojangManager {
     /**
@@ -132,7 +133,7 @@ export class MojangManager {
                     percentage: (downloaded / totalSize) * 100,
                 })
             },
-            { concurrency: 32 }
+            { concurrency: App.ConfigManager.getProperty("concurrency") }
         )
         progress.emit("end")
 

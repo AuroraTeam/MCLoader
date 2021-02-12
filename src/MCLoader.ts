@@ -23,11 +23,13 @@ const version = require("../package").version
 import * as colors from "colors/safe"
 
 import { CommandsManager } from "./commands/CommandsManager"
+import { ConfigManager } from "./ConfigManager"
 import { LogHelper } from "./helpers/LogHelper"
 import { StorageHelper } from "./helpers/StorageHelper"
 
 export class MCLoader {
     private _CommandsManager: CommandsManager
+    private _ConfigManager: ConfigManager
 
     constructor() {
         StorageHelper.createMissing()
@@ -46,10 +48,17 @@ export class MCLoader {
         )
 
         this._CommandsManager = new CommandsManager()
+        this._ConfigManager = new ConfigManager()
+
+        LogHelper.info("Используйте команду `help` чтобы узнать список команд")
     }
 
     get CommandsManager(): CommandsManager {
         return this._CommandsManager
+    }
+
+    get ConfigManager(): ConfigManager {
+        return this._ConfigManager
     }
 }
 
