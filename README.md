@@ -7,7 +7,8 @@
 
 ## Использование
 
-Заполню после заливки репы :)
+Перейти в раздел [Releases](https://github.com/AuroraTeam/MCLoader/releases) и скачать последнюю версию (файл `MCLoader.js`)  
+Положить в любую папку и запускать командой `node MCLoader.js`
 
 ## Лицензия
 
