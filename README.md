@@ -1,4 +1,6 @@
 # MCLoader
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FAuroraTeam%2FMCLoader.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FAuroraTeam%2FMCLoader?ref=badge_shield)
+
 
 Небольшой скрипт который поможет вам скачать ассеты и клиенты для Minecraft с официального зеркала Mojang
 
@@ -24,3 +26,7 @@
 Также сам скрипт аналогично распространяется по лицензии GNU General Public License v3.0
 
 Использование частей кода как Aurora Launcher LauncherServer, так и данного скрипта без указания авторства **запрещено**!
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FAuroraTeam%2FMCLoader.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FAuroraTeam%2FMCLoader?ref=badge_large)
