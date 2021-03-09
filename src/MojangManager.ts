@@ -166,7 +166,7 @@ export class MojangManager {
         try {
             versionsData = await HttpHelper.readFile(new URL(this.versionManifestLink))
         } catch (error) {
-            LogHelper.error("Mojang site unavailable")
+            LogHelper.error("Сайт Mojang недоступен")
             LogHelper.error(error)
             return
         }
@@ -175,14 +175,14 @@ export class MojangManager {
         try {
             versions = JsonHelper.toJSON(versionsData).versions
         } catch (error) {
-            LogHelper.error("Error parsing versions data")
+            LogHelper.error("Ошибка парсинга данных о версиях")
             LogHelper.error(error)
             return
         }
 
         const _version = versions.find((v: any) => v.id === version)
         if (_version === undefined) {
-            LogHelper.error("Version %s not found", version)
+            LogHelper.error("Версия %s не найдена", version)
             return
         }
 
@@ -190,7 +190,7 @@ export class MojangManager {
         try {
             clientData = await HttpHelper.readFile(new URL(_version.url))
         } catch (error) {
-            LogHelper.error("Client data not found")
+            LogHelper.error("Данные клиента не найдены")
             LogHelper.error(error)
             return
         }
@@ -198,7 +198,7 @@ export class MojangManager {
         try {
             return JsonHelper.toJSON(clientData)
         } catch (error) {
-            LogHelper.error("Error parsing client data")
+            LogHelper.error("Ошибка парсинга данных клиента")
             LogHelper.error(error)
             return
         }
