@@ -75,7 +75,7 @@ export class MCLConfig {
 
     static getDefaults(): MCLConfig {
         const defaults = new MCLConfig()
-        defaults.concurrency = 32
+        defaults.concurrency = 8
         return defaults
     }
 }

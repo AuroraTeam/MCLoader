@@ -16,22 +16,23 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { randomBytes } from "crypto"
 import * as fs from "fs"
-import * as https from "https"
 import * as path from "path"
 import { URL } from "url"
 
-import * as pMap from "p-map"
 import * as rimraf from "rimraf"
 
+import { HttpHelper } from "./helpers/HttpHelper"
+import { JsonHelper } from "./helpers/JsonHelper"
 import { LogHelper } from "./helpers/LogHelper"
-import { ProgressHelper } from "./helpers/ProgressHelper"
 import { StorageHelper } from "./helpers/StorageHelper"
 import { ZipHelper } from "./helpers/ZipHelper"
-import { App } from "./MCLoader"
 
 export class MojangManager {
+    clientsLink = "https://libraries.minecraft.net/"
+    assetsLink = "https://resources.download.minecraft.net/"
+    versionManifestLink = "https://launchermeta.mojang.com/mc/game/version_manifest.json"
+
     /**
      * Скачивание клиента с зеркала Mojang
      * @param clientVer - Версия клиента
@@ -49,8 +50,7 @@ export class MojangManager {
         if (fs.existsSync(clientDir)) return LogHelper.error("Папка с таким названием уже существует!")
         fs.mkdirSync(clientDir)
 
-        const clientFile = await this.downloadFile(new URL(client.url))
-        fs.copyFileSync(clientFile, path.resolve(clientDir, "minecraft.jar"))
+        await HttpHelper.downloadFile(new URL(client.url), path.resolve(clientDir, "minecraft.jar"))
 
         // Libraries
         const librariesDir = path.resolve(clientDir, "libraries")
@@ -59,25 +59,15 @@ export class MojangManager {
         LogHelper.info("Библиотеки и нативные файлы загружаются, пожалуйста подождите...")
         const librariesList = this.librariesParse(libraries)
 
-        await Promise.all(
-            Array.from(librariesList.libraries).map(async (lib) => {
-                const libFile = await this.downloadFile(new URL(lib, "https://libraries.minecraft.net/"), false)
-                fs.mkdirSync(path.resolve(librariesDir, path.dirname(lib)), { recursive: true })
-                fs.copyFileSync(libFile, path.resolve(librariesDir, lib))
-            })
-        )
+        await HttpHelper.downloadFiles(librariesList.libraries, this.clientsLink, librariesDir)
 
         // Natives
         const nativesDir = path.resolve(clientDir, "natives")
         fs.mkdirSync(nativesDir)
 
-        await Promise.all(
-            Array.from(librariesList.natives).map(async (native) => {
-                const nativeFile = await this.downloadFile(new URL(native, "https://libraries.minecraft.net/"), false)
-                await ZipHelper.unzipArchive(nativeFile, nativesDir, [".dll", ".so", ".dylib", ".jnilib"])
-            })
-        )
-
+        await HttpHelper.downloadFiles(librariesList.natives, this.clientsLink, StorageHelper.tempDir, (filePath) => {
+            ZipHelper.unzipArchive(filePath, nativesDir, [".dll", ".so", ".dylib", ".jnilib"])
+        })
         rimraf(path.resolve(StorageHelper.tempDir, "*"), (e) => {
             if (e !== null) LogHelper.warn(e)
         })
@@ -98,49 +88,19 @@ export class MojangManager {
         if (fs.existsSync(assetsDir)) return LogHelper.error("Папка с таким названием уже существует!")
         fs.mkdirSync(assetsDir)
 
-        const assetsFile = await this.downloadFile(new URL(version.assetIndex.url), false)
+        const assetsFile = await HttpHelper.readFile(new URL(version.assetIndex.url))
         fs.mkdirSync(path.resolve(assetsDir, "indexes"))
-        const json = path.resolve(assetsDir, `indexes/${assetsVer}.json`)
-        fs.copyFileSync(assetsFile, json)
+        fs.writeFileSync(path.resolve(assetsDir, `indexes/${version.assets}.json`), assetsFile)
 
-        const assetsData = JSON.parse(fs.readFileSync(json).toString()).objects
-
-        const assetsHashes: Map<string, number> = new Map()
-
+        const assetsData = JsonHelper.toJSON(assetsFile).objects
+        const assetsHashes: Set<string> = new Set()
         for (const key in assetsData) {
-            assetsHashes.set(assetsData[key].hash, assetsData[key].size)
+            const hash = assetsData[key].hash
+            assetsHashes.add(`${hash.slice(0, 2)}/${hash}`)
         }
 
-        const totalSize = version.assetIndex.totalSize
-        let downloaded = 0
-
         LogHelper.info("Файлы ассетов загружаются, пожалуйста подождите...")
-        const progress = ProgressHelper.getLoadingProgressBar()
-        await pMap(
-            assetsHashes,
-            async ([hash, size]) => {
-                const assetFile = await this.downloadFile(
-                    new URL(`${hash.slice(0, 2)}/${hash}`, "https://resources.download.minecraft.net/"),
-                    false
-                )
-
-                const assetDir = path.resolve(assetsDir, `objects/${hash.slice(0, 2)}`)
-                if (!fs.existsSync(assetDir)) fs.mkdirSync(assetDir, { recursive: true })
-                fs.copyFileSync(assetFile, path.resolve(assetDir, hash))
-
-                downloaded += size
-                progress.emit("progress", {
-                    percentage: (downloaded / totalSize) * 100,
-                })
-            },
-            { concurrency: App.ConfigManager.getProperty("concurrency") }
-        )
-        progress.emit("end")
-
-        rimraf(path.resolve(StorageHelper.tempDir, "*"), (e) => {
-            if (e !== null) LogHelper.warn(e)
-        })
-
+        await HttpHelper.downloadFiles(assetsHashes, this.assetsLink, path.resolve(assetsDir, "objects"))
         LogHelper.info("Готово")
     }
 
@@ -201,90 +161,44 @@ export class MojangManager {
         return filteredData
     }
 
-    /**
-     * Скачивание файла с зеркала с зеркала Mojang (https only)
-     * @param url - Объект Url, содержащий ссылку на файл
-     * @returns Promise который вернёт название временного файла в случае успеха
-     */
-    downloadFile(url: URL, showProgress = true): Promise<string> {
-        return new Promise((resolve, reject) => {
-            const tempFilename = path.resolve(StorageHelper.tempDir, randomBytes(16).toString("hex"))
-            const tempFile = fs.createWriteStream(tempFilename)
-            tempFile.on("close", () => {
-                resolve(tempFilename)
-            })
-
-            https
-                .get(url, (res) => {
-                    if (showProgress) {
-                        res.pipe(
-                            ProgressHelper.getDownloadProgressBar({
-                                length: parseInt(res.headers["content-length"], 10),
-                            })
-                        ).pipe(tempFile)
-                    } else {
-                        res.pipe(tempFile)
-                    }
-                })
-                .on("error", (err) => {
-                    fs.unlinkSync(tempFilename)
-                    reject(err)
-                })
-        })
-    }
-
-    /**
-     * Просмотр файла (https only)
-     * @param url - Ссылка на файл
-     * @returns Promise который вернёт содержимое файла в случае успеха
-     */
-    readFile(url: string): Promise<string> {
-        return new Promise(function (resolve, reject) {
-            https
-                .get(url, (res) => {
-                    res.setEncoding("utf8")
-                    let data = ""
-                    res.on("data", (chunk) => {
-                        data += chunk
-                    })
-                    res.on("end", () => {
-                        resolve(data)
-                    })
-                })
-                .on("error", (err) => {
-                    reject(err)
-                })
-        })
-    }
-
     async getVersionInfo(version: string): Promise<any> {
         let versionsData
         try {
-            versionsData = await this.readFile("https://launchermeta.mojang.com/mc/game/version_manifest.json")
+            versionsData = await HttpHelper.readFile(new URL(this.versionManifestLink))
         } catch (error) {
-            LogHelper.error("Mojang site unavailable")
+            LogHelper.error("Сайт Mojang недоступен")
             LogHelper.error(error)
             return
         }
 
         let versions
         try {
-            versions = JSON.parse(versionsData).versions
+            versions = JsonHelper.toJSON(versionsData).versions
         } catch (error) {
-            LogHelper.error("Error parsing JSON data")
+            LogHelper.error("Ошибка парсинга данных о версиях")
             LogHelper.error(error)
             return
         }
 
         const _version = versions.find((v: any) => v.id === version)
         if (_version === undefined) {
-            LogHelper.error("Version %s not found", version)
+            LogHelper.error("Версия %s не найдена", version)
+            return
+        }
+
+        let clientData
+        try {
+            clientData = await HttpHelper.readFile(new URL(_version.url))
+        } catch (error) {
+            LogHelper.error("Данные клиента не найдены")
+            LogHelper.error(error)
             return
         }
 
         try {
-            return JSON.parse(await this.readFile(_version.url))
+            return JsonHelper.toJSON(clientData)
         } catch (error) {
+            LogHelper.error("Ошибка парсинга данных клиента")
             LogHelper.error(error)
             return
         }

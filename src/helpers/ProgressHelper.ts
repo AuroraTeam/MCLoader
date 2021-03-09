@@ -16,80 +16,72 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import * as progress from "progress-stream"
+import { Format, GenericFormatter, MultiBar, Options, Params, SingleBar } from "cli-progress"
 
 export class ProgressHelper {
     static barCompleteChar = "\u2588"
     static barIncompleteChar = "\u2591"
     static barsize = 20
 
-    static getLoadingProgressBar(options?: progress.Options): progress.ProgressStream {
-        return this.getProgress(options, ProgressType.LOADING)
+    public static getLoadingProgressBar(): SingleBar {
+        return this.getProgress("{bar} {percentage}%", this.barsize * 2)
     }
 
-    static getDownloadProgressBar(options: progress.Options): progress.ProgressStream {
-        return this.getProgress(options, ProgressType.DOWNLOAD)
+    public static getDownloadProgressBar(): SingleBar {
+        return this.getProgress(this.downloadFormatter)
     }
 
-    private static getProgress(options: progress.Options, type: ProgressType): progress.ProgressStream {
-        const info = progress(options)
-        process.stdout.write("\x1B[?25l") // Hide cursor
-        info.on("progress", (progress) => {
-            process.stdout.clearLine(0)
-            process.stdout.cursorTo(0)
-            switch (type) {
-                case ProgressType.LOADING:
-                    process.stdout.write(this.getLoadingProgressTemplate(progress))
-                    break
-                case ProgressType.DOWNLOAD:
-                    process.stdout.write(this.getDownloadProgressTemplate(progress))
-                    break
-            }
-        })
-        info.on("end", () => {
-            process.stdout.clearLine(0)
-            process.stdout.cursorTo(0)
-            process.stdout.write("\x1B[?25h") // Show cursor
-        })
-        return info
+    public static getDownloadMultiProgressBar(): MultiBar {
+        return this.getMultiProgress(this.downloadFormatter)
     }
 
-    private static getLoadingProgressTemplate(progress: progress.Progress) {
-        return "{bar} {percent}%"
-            .replace("{bar}", this.getBar(progress.percentage, this.barsize * 2))
-            .replace("{percent}", progress.percentage.toFixed(2))
+    private static getProgress(format: string | GenericFormatter, barsize = 0): SingleBar {
+        return new SingleBar(this.getDefaultParams(format, barsize))
     }
 
-    private static getDownloadProgressTemplate(progress: progress.Progress) {
-        return "{bar} {percent}% | Осталось: {eta}s | Скорость: {speed}/s | {transferred}/{total}"
-            .replace("{bar}", this.getBar(progress.percentage))
-            .replace("{percent}", progress.percentage.toFixed(2))
-            .replace("{eta}", progress.eta.toString())
-            .replace("{speed}", this.bytesToSize(progress.speed))
-            .replace("{transferred}", this.bytesToSize(progress.transferred))
-            .replace("{total}", this.bytesToSize(progress.length))
+    private static getMultiProgress(format: string | GenericFormatter, barsize = 0): MultiBar {
+        return new MultiBar(this.getDefaultParams(format, barsize))
     }
 
-    private static getBar(percentage: number, size = 0): string {
-        // calculate barsize
-        const barsize = size !== 0 ? size : this.barsize
-        const completeSize = Math.round((percentage / 100) * barsize)
-        const incompleteSize = barsize - completeSize
+    private static getDefaultParams(format: string | GenericFormatter, barsize: number): Options {
+        return {
+            format,
+            barCompleteChar: this.barCompleteChar,
+            barIncompleteChar: this.barIncompleteChar,
+            barsize: barsize !== 0 ? barsize : this.barsize,
+            hideCursor: true,
+            clearOnComplete: true,
+            stopOnComplete: true,
+            autopadding: true,
+            emptyOnZero: true,
+        }
+    }
 
-        // generate bar string by stripping the pre-rendered strings
-        return this.barCompleteChar.repeat(completeSize) + this.barIncompleteChar.repeat(incompleteSize)
+    private static downloadFormatter(options: Options, params: Params, payload: any) {
+        const elapsedTime = Math.round((Date.now() - params.startTime) / 1000)
+        const speed = params.value / elapsedTime
+        payload.speed = ProgressHelper.bytesToSize(isFinite(speed) ? speed : 0)
+
+        // Переопределение `скачано/всего`
+        payload.value_formatted = ProgressHelper.bytesToSize(params.value)
+        payload.total_formatted = ProgressHelper.bytesToSize(params.total)
+
+        return Format.Formatter(
+            {
+                ...options,
+                format:
+                    "{bar} {percentage}% | Осталось: {eta_formatted} | Скорость: {speed}/s | {value_formatted}/{total_formatted} | {filename}",
+            },
+            params,
+            payload
+        )
     }
 
     private static bytesToSize(bytes: number): string {
         const sizes = ["Bytes", "KB", "MB"]
-        if (bytes === 0) return "n/a"
+        if (bytes === 0) return "0"
         const i = Math.floor(Math.log(bytes) / Math.log(1024))
         if (i === 0) return `${bytes} ${sizes[i]})`
         return `${(bytes / 1024 ** i).toFixed(2)} ${sizes[i]}`
     }
-}
-
-export enum ProgressType {
-    DOWNLOAD,
-    LOADING,
 }
