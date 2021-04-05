@@ -38,7 +38,7 @@ jobs:
       - name: Upload release
         uses: softprops/action-gh-release@v1
         with:
-          tag: ${{ env.PACKAGE_VERSION }}
+          tag_name: ${{ env.PACKAGE_VERSION }}
           name: MCLoader ${{ env.PACKAGE_VERSION }}
           files: |
             dist/MCLoader.js
