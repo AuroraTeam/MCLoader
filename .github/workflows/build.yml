@@ -23,7 +23,9 @@ jobs:
         run: npm ci
 
       - name: Build MCLoader
-        run: npm run build
+        run: |
+          npm run build
+          npm run build:bin
 
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v2.2.0
@@ -33,21 +35,15 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Create release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ env.PACKAGE_VERSION }}
-          release_name: MCLoader ${{ env.PACKAGE_VERSION }}
-
       - name: Upload release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/MCLoader.js
-          asset_name: MCLoader.js
-          asset_content_type: application/javascript
+        uses: softprops/action-gh-release@v1
+          with:
+            tag: ${{ env.PACKAGE_VERSION }}
+            name: MCLoader ${{ env.PACKAGE_VERSION }}
+            files: |
+              dist/MCLoader.js
+              dist/MCLoader_win64.exe
+              dist/MCLoader_linux64
+              dist/MCLoader_mac64
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
