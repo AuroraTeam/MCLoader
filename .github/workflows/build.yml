@@ -37,13 +37,13 @@ jobs:
 
       - name: Upload release
         uses: softprops/action-gh-release@v1
-          with:
-            tag: ${{ env.PACKAGE_VERSION }}
-            name: MCLoader ${{ env.PACKAGE_VERSION }}
-            files: |
-              dist/MCLoader.js
-              dist/MCLoader_win64.exe
-              dist/MCLoader_linux64
-              dist/MCLoader_mac64
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag: ${{ env.PACKAGE_VERSION }}
+          name: MCLoader ${{ env.PACKAGE_VERSION }}
+          files: |
+            dist/MCLoader.js
+            dist/MCLoader_win64.exe
+            dist/MCLoader_linux64
+            dist/MCLoader_mac64
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
