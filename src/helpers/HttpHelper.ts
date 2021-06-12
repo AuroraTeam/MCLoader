@@ -24,7 +24,7 @@ import * as path from "path"
 import { URL } from "url"
 
 import { SingleBar } from "cli-progress"
-import * as pMap from "p-map"
+import pMap from "p-map"
 
 import { App } from "../MCLoader"
 import { LogHelper } from "./LogHelper"
