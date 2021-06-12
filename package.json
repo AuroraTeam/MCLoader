@@ -1,6 +1,6 @@
 {
     "name": "mc-loader",
-    "version": "1.0.2+builds",
+    "version": "1.0.2+20210613",
     "description": "Downloader for Minecraft assets and clients",
     "main": "dist/MCLoader.js",
     "scripts": {
