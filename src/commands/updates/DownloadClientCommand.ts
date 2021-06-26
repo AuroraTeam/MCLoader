@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { FabricManager } from "../../FabricManager"
 import { LogHelper } from "../../helpers/LogHelper"
 import { App } from "../../MCLoader"
 import { MojangManager } from "../../MojangManager"
@@ -23,15 +24,25 @@ import { AbstractCommand, Category } from "../AbstractCommand"
 
 export class DownloadClientCommand extends AbstractCommand {
     constructor() {
-        super("downloadclient", "Загрузить клиент с зеркала Mojang", Category.UPDATES, "<version> <folder name>")
+        super("downloadclient", "Загрузить клиент", Category.UPDATES, "<version> <folder name> <?source type>")
     }
 
     async invoke(...args: string[]): Promise<void> {
-        const [clientVer, dirName] = args
+        const [clientVer, dirName, sourceType = "mojang"] = args
         if (!clientVer) return LogHelper.error("Укажите название/версию клиента!")
         if (!dirName) return LogHelper.error("Укажите название папки для клиента!")
         App.CommandsManager.console.pause()
-        new MojangManager().downloadClient(clientVer, dirName)
+        switch (sourceType) {
+            case "fabric":
+                await new FabricManager().downloadClient(clientVer, dirName)
+                break
+            case "mojang":
+                await new MojangManager().downloadClient(clientVer, dirName)
+                break
+            default:
+                LogHelper.error(`Неизвестный тип источника: ${sourceType}`)
+                break
+        }
         App.CommandsManager.console.resume()
     }
 }

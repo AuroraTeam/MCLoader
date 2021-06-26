@@ -38,7 +38,7 @@ export class MojangManager {
      * @param clientVer - Версия клиента
      * @param dirName - Название конечной папки
      */
-    async downloadClient(clientVer: string, dirName: string): Promise<void> {
+    async downloadClient(clientVer: string, dirName: string, modloader = false): Promise<void> {
         const version: any = await this.getVersionInfo(clientVer)
         if (version === undefined) return
 
@@ -72,7 +72,7 @@ export class MojangManager {
             if (e !== null) LogHelper.warn(e)
         })
 
-        LogHelper.info("Готово")
+        if (!modloader) LogHelper.info("Готово")
     }
 
     /**
@@ -92,7 +92,7 @@ export class MojangManager {
         fs.mkdirSync(path.resolve(assetsDir, "indexes"))
         fs.writeFileSync(path.resolve(assetsDir, `indexes/${version.assets}.json`), assetsFile)
 
-        const assetsData = JsonHelper.toJSON(assetsFile).objects
+        const assetsData = JsonHelper.fromJSON(assetsFile).objects
         const assetsHashes: Set<string> = new Set()
         for (const key in assetsData) {
             const hash = assetsData[key].hash
@@ -173,7 +173,7 @@ export class MojangManager {
 
         let versions
         try {
-            versions = JsonHelper.toJSON(versionsData).versions
+            versions = JsonHelper.fromJSON(versionsData).versions
         } catch (error) {
             LogHelper.error("Ошибка парсинга данных о версиях")
             LogHelper.error(error)
@@ -196,7 +196,7 @@ export class MojangManager {
         }
 
         try {
-            return JsonHelper.toJSON(clientData)
+            return JsonHelper.fromJSON(clientData)
         } catch (error) {
             LogHelper.error("Ошибка парсинга данных клиента")
             LogHelper.error(error)

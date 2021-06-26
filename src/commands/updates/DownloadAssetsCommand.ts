@@ -23,7 +23,7 @@ import { AbstractCommand, Category } from "../AbstractCommand"
 
 export class DownloadAssetsCommand extends AbstractCommand {
     constructor() {
-        super("downloadassets", "Загрузить ресурсы с зеркала Mojang", Category.UPDATES, "<version> <folder name>")
+        super("downloadassets", "Загрузить ассеты", Category.UPDATES, "<version> <folder name>")
     }
 
     async invoke(...args: string[]): Promise<void> {

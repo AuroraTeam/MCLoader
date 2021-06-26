@@ -69,8 +69,7 @@ export class ProgressHelper {
         return Format.Formatter(
             {
                 ...options,
-                format:
-                    "{bar} {percentage}% | Осталось: {eta_formatted} | Скорость: {speed}/s | {value_formatted}/{total_formatted} | {filename}",
+                format: "{bar} {percentage}% | Осталось: {eta_formatted} | Скорость: {speed}/s | {value_formatted}/{total_formatted} | {filename}",
             },
             params,
             payload
