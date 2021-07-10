@@ -14,7 +14,8 @@
     },
     "author": "AuroraTeam",
     "contributors": [
-        "JoCat (https://github.com/JoCat)"
+        "JoCat (https://github.com/JoCat)",
+        "FIXxp (https://github.com/FIXxp)"
     ],
     "license": "GPL-3.0",
     "devDependencies": {
